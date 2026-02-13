@@ -4,6 +4,8 @@
 
 #define _POSIX_C_SOURCE 200112L
 #include <stdlib.h>
+#include <string.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
@@ -16,6 +18,24 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     struct lw_view *view = wl_container_of(listener, view, map);
     wl_list_insert(&view->server->views, &view->link);
     view->mapped = true;
+
+    /* Position the shell taskbar at the bottom of the output */
+    const char *app_id = view->xdg_toplevel->app_id;
+    const char *title = view->xdg_toplevel->title;
+    if ((app_id && strcmp(app_id, "lwindesk-shell") == 0) ||
+        (title && strcmp(title, "lwindesk-shell") == 0)) {
+        /* Get first output dimensions from the layout */
+        struct wlr_box output_box;
+        wlr_output_layout_get_box(view->server->output_layout, NULL,
+                                   &output_box);
+        /* Place at bottom, full width, 48px tall */
+        int y = output_box.height - 48;
+        wlr_scene_node_set_position(&view->scene_tree->node, 0, y);
+        view->x = 0;
+        view->y = y;
+        wlr_log(WLR_INFO, "Shell taskbar positioned at y=%d", y);
+    }
+
     lw_view_focus(view);
 }
 

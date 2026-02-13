@@ -74,7 +74,16 @@ void ShellManager::lockScreen() {
 }
 
 void ShellManager::launchApp(const QString &command) {
-    QProcess::startDetached("/bin/sh", {"-c", command});
+    QProcess *proc = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.remove("DISPLAY");
+    env.insert("QT_QPA_PLATFORM", "wayland");
+    env.insert("GDK_BACKEND", "wayland");
+    proc->setProcessEnvironment(env);
+    proc->setProgram("/bin/sh");
+    proc->setArguments({"-c", command});
+    proc->startDetached();
+    proc->deleteLater();
     setStartMenuVisible(false);
 }
 

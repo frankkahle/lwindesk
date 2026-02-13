@@ -62,6 +62,10 @@ int lw_server_init(struct lw_server *server) {
     server->scene_layout = wlr_scene_attach_output_layout(server->scene,
                                                             server->output_layout);
 
+    /* Desktop background (dark blue, Windows 11-inspired) */
+    float bg_color[4] = {0.0f, 0.47f, 0.83f, 1.0f};  /* #0078D4 */
+    wlr_scene_rect_create(&server->scene->tree, 8192, 8192, bg_color);
+
     /* Create Wayland globals */
     wlr_compositor_create(server->wl_display, 5, server->renderer);
     wlr_subcompositor_create(server->wl_display);

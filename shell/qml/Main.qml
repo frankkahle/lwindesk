@@ -3,85 +3,77 @@ import QtQuick.Window
 import LWinDesk
 
 /*
- * Main shell window - contains the taskbar, start menu, and overlays.
- * This will be displayed as a layer-shell surface anchored to the screen.
+ * Main shell window - a 48px taskbar anchored to the bottom of the screen.
+ * Start menu and panels open as child popups above the taskbar.
  */
 Window {
     id: root
     visible: true
     width: Screen.width > 0 ? Screen.width : 1920
-    height: Screen.height > 0 ? Screen.height : 1080
+    height: 48
+    x: 0
+    y: (Screen.height > 0 ? Screen.height : 1080) - 48
     color: "transparent"
-    flags: Qt.FramelessWindowHint
+    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
-    /* Windows 11-style desktop background gradient */
-    Rectangle {
-        anchors.fill: parent
-        z: -2
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#1B1B3A" }
-            GradientStop { position: 0.4; color: "#0078D4" }
-            GradientStop { position: 0.7; color: "#50E6FF" }
-            GradientStop { position: 1.0; color: "#1B1B3A" }
-        }
-    }
-
-    /* Taskbar at the bottom */
+    /* Taskbar fills the window */
     Loader {
         id: taskbarLoader
         source: "taskbar/Taskbar.qml"
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-    }
-
-    /* Start Menu (centered above taskbar) */
-    Loader {
-        id: startMenuLoader
-        active: shellManager.startMenuVisible
-        source: "startmenu/StartMenu.qml"
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: taskbarLoader.top
-        anchors.bottomMargin: 12
-    }
-
-    /* Notification Center (right side panel) */
-    Loader {
-        id: notifLoader
-        active: shellManager.notificationCenterVisible
-        source: "notifications/NotificationCenter.qml"
-        anchors.right: parent.right
-        anchors.bottom: taskbarLoader.top
-        anchors.bottomMargin: 12
-        anchors.rightMargin: 12
-    }
-
-    /* Quick Settings panel */
-    Loader {
-        id: quickSettingsLoader
-        active: shellManager.quickSettingsVisible
-        source: "quicksettings/QuickSettings.qml"
-        anchors.right: parent.right
-        anchors.bottom: taskbarLoader.top
-        anchors.bottomMargin: 12
-        anchors.rightMargin: 12
-    }
-
-    /* Snap zone overlay (shown during window drag) */
-    Loader {
-        id: snapLoader
-        source: "snapoverlay/SnapOverlay.qml"
         anchors.fill: parent
     }
 
-    /* Click outside panels to dismiss */
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: {
-            shellManager.startMenuVisible = false
-            shellManager.notificationCenterVisible = false
-            shellManager.quickSettingsVisible = false
+    /* Start Menu window (separate popup above taskbar) */
+    Window {
+        id: startMenuWindow
+        visible: shellManager.startMenuVisible
+        width: 640
+        height: 720
+        x: (root.width - 640) / 2
+        y: root.y - 720 - 12
+        color: "transparent"
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+
+        Loader {
+            active: shellManager.startMenuVisible
+            source: "startmenu/StartMenu.qml"
+            anchors.fill: parent
+        }
+    }
+
+    /* Notification Center window */
+    Window {
+        id: notifWindow
+        visible: shellManager.notificationCenterVisible
+        width: 380
+        height: 600
+        x: root.width - 380 - 12
+        y: root.y - 600 - 12
+        color: "transparent"
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+
+        Loader {
+            active: shellManager.notificationCenterVisible
+            source: "notifications/NotificationCenter.qml"
+            anchors.fill: parent
+        }
+    }
+
+    /* Quick Settings window */
+    Window {
+        id: quickSettingsWindow
+        visible: shellManager.quickSettingsVisible
+        width: 360
+        height: 400
+        x: root.width - 360 - 12
+        y: root.y - 400 - 12
+        color: "transparent"
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+
+        Loader {
+            active: shellManager.quickSettingsVisible
+            source: "quicksettings/QuickSettings.qml"
+            anchors.fill: parent
         }
     }
 }
