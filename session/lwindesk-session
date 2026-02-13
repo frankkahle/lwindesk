@@ -1,0 +1,10 @@
+#!/bin/sh
+# lwindesk session launcher
+# This is executed by the display manager (GDM) when the user selects LWinDesk
+
+export XDG_CURRENT_DESKTOP=LWinDesk
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=lwindesk
+
+# Start the compositor, which will launch the shell
+exec lwindesk-compositor -s lwindesk-shell

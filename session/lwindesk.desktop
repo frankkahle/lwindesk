@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LWinDesk
+Comment=A Windows 11-like Wayland Desktop Environment
+Exec=lwindesk-session
+Type=Application
+DesktopNames=LWinDesk

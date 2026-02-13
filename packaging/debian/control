@@ -1,0 +1,38 @@
+Source: lwindesk
+Section: x11
+Priority: optional
+Maintainer: Frank Kahle <frank@lwindesk>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.22),
+               pkg-config,
+               libwlroots-dev (>= 0.17),
+               libwayland-dev,
+               wayland-protocols,
+               libxkbcommon-dev,
+               libinput-dev,
+               libdrm-dev,
+               libgbm-dev,
+               libegl-dev,
+               libgles-dev,
+               libpixman-1-dev,
+               libseat-dev,
+               libsystemd-dev,
+               qt6-base-dev,
+               qt6-declarative-dev,
+               qt6-wayland-dev,
+               qt6-svg-dev
+Standards-Version: 4.6.2
+
+Package: lwindesk
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         xwayland,
+         qml6-module-qtquick,
+         qml6-module-qtquick-controls,
+         qml6-module-qtquick-layouts
+Description: A Windows 11-like Wayland Desktop Environment
+ LWinDesk is a lightweight Wayland desktop environment for Linux that
+ provides a familiar Windows 11 experience. Features include a centered
+ taskbar, start menu, snap layouts, virtual desktops, notification center,
+ and quick settings panel.
