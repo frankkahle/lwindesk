@@ -20,12 +20,12 @@ int main(int argc, char *argv[]) {
     app.setOrganizationName("lwindesk");
 
     /* Register C++ types for QML */
-    qmlRegisterType<ShellManager>("LWinDesk.Shell", 1, 0, "ShellManager");
-    qmlRegisterType<TaskbarModel>("LWinDesk.Shell", 1, 0, "TaskbarModel");
-    qmlRegisterType<StartMenuModel>("LWinDesk.Shell", 1, 0, "StartMenuModel");
-    qmlRegisterType<NotificationManager>("LWinDesk.Shell", 1, 0,
+    qmlRegisterType<ShellManager>("LWinDesk", 1, 0, "ShellManager");
+    qmlRegisterType<TaskbarModel>("LWinDesk", 1, 0, "TaskbarModel");
+    qmlRegisterType<StartMenuModel>("LWinDesk", 1, 0, "StartMenuModel");
+    qmlRegisterType<NotificationManager>("LWinDesk", 1, 0,
                                           "NotificationManager");
-    qmlRegisterType<SystemTrayManager>("LWinDesk.Shell", 1, 0,
+    qmlRegisterType<SystemTrayManager>("LWinDesk", 1, 0,
                                         "SystemTrayManager");
 
     QQmlApplicationEngine engine;
@@ -34,7 +34,8 @@ int main(int argc, char *argv[]) {
     ShellManager shellManager;
     engine.rootContext()->setContextProperty("shellManager", &shellManager);
 
-    engine.loadFromModule("LWinDesk", "Main");
+    const QUrl url(QStringLiteral("qrc:/LWinDesk/qml/Main.qml"));
+    engine.load(url);
 
     if (engine.rootObjects().isEmpty()) {
         qCritical("Failed to load QML shell");

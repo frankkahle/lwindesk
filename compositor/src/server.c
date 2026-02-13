@@ -35,8 +35,7 @@ int lw_server_init(struct lw_server *server) {
     }
 
     /* Create backend (auto-detects DRM/libinput or Wayland/X11 nested) */
-    server->backend = wlr_backend_autocreate(
-        wl_display_get_event_loop(server->wl_display), NULL);
+    server->backend = wlr_backend_autocreate(server->wl_display, NULL);
     if (!server->backend) {
         wlr_log(WLR_ERROR, "Failed to create wlroots backend");
         return -1;
@@ -59,7 +58,7 @@ int lw_server_init(struct lw_server *server) {
 
     /* Create scene graph for efficient rendering */
     server->scene = wlr_scene_create();
-    server->output_layout = wlr_output_layout_create(server->wl_display);
+    server->output_layout = wlr_output_layout_create();
     server->scene_layout = wlr_scene_attach_output_layout(server->scene,
                                                             server->output_layout);
 
@@ -69,13 +68,10 @@ int lw_server_init(struct lw_server *server) {
     wlr_data_device_manager_create(server->wl_display);
 
     /* XDG shell for application windows */
-    server->xdg_shell = wlr_xdg_shell_create(server->wl_display, 6);
-    server->new_xdg_toplevel.notify = lw_xdg_new_toplevel;
-    wl_signal_add(&server->xdg_shell->events.new_toplevel,
-                  &server->new_xdg_toplevel);
-    server->new_xdg_popup.notify = lw_xdg_new_popup;
-    wl_signal_add(&server->xdg_shell->events.new_popup,
-                  &server->new_xdg_popup);
+    server->xdg_shell = wlr_xdg_shell_create(server->wl_display, 3);
+    server->new_xdg_surface.notify = lw_xdg_new_surface;
+    wl_signal_add(&server->xdg_shell->events.new_surface,
+                  &server->new_xdg_surface);
 
     /* Initialize view list */
     wl_list_init(&server->views);

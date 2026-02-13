@@ -10,19 +10,19 @@ import "../common"
 LWPanel {
     id: taskbar
     height: 48
-    color: Qt.rgba(0.15, 0.15, 0.15, 0.85)
+    color: Qt.rgba(0.12, 0.12, 0.12, 0.92)
     radius: 0
 
     RowLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 2
 
         /* Left spacer */
         Item { Layout.fillWidth: true }
 
-        /* Start button */
+        /* Start button (Windows logo approximation) */
         TaskbarButton {
-            iconSource: "image://theme/start-here-symbolic"
+            iconText: "\u2756"
             tooltip: "Start"
             isStartButton: true
             onClicked: shellManager.toggleStartMenu()
@@ -30,27 +30,16 @@ LWPanel {
 
         /* Search button */
         TaskbarButton {
-            iconSource: "image://theme/edit-find-symbolic"
+            iconText: "\uD83D\uDD0D"
             tooltip: "Search"
             onClicked: { /* TODO: open search overlay */ }
         }
 
         /* Virtual desktops button */
         TaskbarButton {
-            iconSource: "image://theme/view-grid-symbolic"
+            iconText: "\u2B1A"
             tooltip: "Task View"
             onClicked: { /* TODO: open desktop switcher */ }
-        }
-
-        /* Pinned and running app buttons (from taskbar model) */
-        Repeater {
-            model: TaskbarModel {}
-            delegate: TaskbarButton {
-                iconSource: "image://theme/" + model.iconName
-                tooltip: model.title
-                active: model.active
-                onClicked: taskbarModel.activateWindow(index)
-            }
         }
 
         /* Right spacer */
@@ -58,12 +47,20 @@ LWPanel {
 
         /* System tray */
         SystemTray {
-            Layout.alignment: Qt.AlignRight
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+        }
+
+        /* Separator */
+        Rectangle {
+            width: 1
+            height: 24
+            color: Qt.rgba(1, 1, 1, 0.15)
+            Layout.alignment: Qt.AlignVCenter
         }
 
         /* Clock */
         ClockWidget {
-            Layout.alignment: Qt.AlignRight
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
             onClicked: shellManager.notificationCenterVisible =
                 !shellManager.notificationCenterVisible
         }

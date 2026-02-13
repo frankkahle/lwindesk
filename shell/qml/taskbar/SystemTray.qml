@@ -2,27 +2,36 @@ import QtQuick
 import QtQuick.Layouts
 
 Row {
-    spacing: 4
+    spacing: 2
     height: parent.height
 
-    /* Placeholder tray icons */
+    /* System tray icons using Unicode symbols */
     Repeater {
-        model: ["network-wireless-symbolic",
-                "audio-volume-medium-symbolic",
-                "battery-good-symbolic"]
+        model: [
+            { icon: "\uD83D\uDD0A", tip: "Volume" },
+            { icon: "\u2B06", tip: "Network" },
+            { icon: "\uD83D\uDD0B", tip: "Battery" }
+        ]
         delegate: Rectangle {
-            width: 24
-            height: 24
+            width: 28
+            height: 28
+            radius: 4
             anchors.verticalCenter: parent.verticalCenter
-            color: "transparent"
+            color: trayMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
 
-            Image {
+            Text {
                 anchors.centerIn: parent
-                width: 16
-                height: 16
-                source: "image://theme/" + modelData
-                sourceSize: Qt.size(16, 16)
-                opacity: 0.8
+                text: modelData.icon
+                font.pixelSize: 14
+                color: Qt.rgba(1, 1, 1, 0.85)
+            }
+
+            MouseArea {
+                id: trayMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: shellManager.quickSettingsVisible =
+                    !shellManager.quickSettingsVisible
             }
         }
     }

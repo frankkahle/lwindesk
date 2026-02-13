@@ -12,7 +12,7 @@ option(BUILD_TESTS "Build test suite" OFF)
 find_package(PkgConfig REQUIRED)
 
 # Compositor dependencies (wlroots + Wayland)
-pkg_check_modules(WLROOTS REQUIRED wlroots-0.18)
+pkg_check_modules(WLROOTS REQUIRED wlroots)
 pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
 pkg_check_modules(WAYLAND_PROTOCOLS REQUIRED wayland-protocols)
 pkg_check_modules(XKBCOMMON REQUIRED xkbcommon)
@@ -24,7 +24,7 @@ pkg_check_modules(LIBSEAT REQUIRED libseat)
 pkg_check_modules(SYSTEMD REQUIRED libsystemd)
 
 # Shell dependencies (Qt6)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WaylandClient Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 WaylandClient Svg)
 qt_standard_project_setup()
 
 # Subdirectories

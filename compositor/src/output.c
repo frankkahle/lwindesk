@@ -4,6 +4,8 @@
 
 #define _POSIX_C_SOURCE 200112L
 #include <stdlib.h>
+#include <string.h>
+#include <wlr/backend/x11.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/util/log.h>
@@ -52,9 +54,26 @@ void lw_output_new(struct wl_listener *listener, void *data) {
     wlr_output_state_init(&state);
     wlr_output_state_set_enabled(&state, true);
 
-    struct wlr_output_mode *mode = wlr_output_preferred_mode(wlr_output);
-    if (mode) {
-        wlr_output_state_set_mode(&state, mode);
+    if (wlr_output_is_x11(wlr_output)) {
+        /* Running nested in X11 (e.g., xrdp). Use screen size from env
+         * or fall back to a reasonable default. */
+        int w = 1920, h = 1080;
+        const char *res = getenv("LWINDESK_RESOLUTION");
+        if (res) {
+            int pw, ph;
+            if (sscanf(res, "%dx%d", &pw, &ph) == 2) {
+                w = pw;
+                h = ph;
+            }
+        }
+        wlr_output_state_set_custom_mode(&state, w, h, 0);
+        wlr_x11_output_set_title(wlr_output, "LWinDesk");
+        wlr_log(WLR_INFO, "X11 backend: setting output to %dx%d", w, h);
+    } else {
+        struct wlr_output_mode *mode = wlr_output_preferred_mode(wlr_output);
+        if (mode) {
+            wlr_output_state_set_mode(&state, mode);
+        }
     }
     wlr_output_commit_state(wlr_output, &state);
     wlr_output_state_finish(&state);

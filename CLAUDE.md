@@ -22,7 +22,7 @@ make -j$(nproc)
 ```
 
 ## Key Design Decisions
-- wlroots 0.18 for compositor (scene-graph API)
+- wlroots 0.17 for compositor (scene-graph API, Ubuntu 24.04)
 - Qt6/QML for shell UI (GPU-accelerated, declarative)
 - IPC between compositor and shell via Wayland protocols
 - Layer shell for taskbar/overlays

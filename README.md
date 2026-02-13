@@ -42,7 +42,7 @@ LWinDesk is a from-scratch desktop environment built on **wlroots** (compositor)
 
 ```
 lwindesk/
-├── compositor/          # Wayland compositor (C, wlroots 0.18)
+├── compositor/          # Wayland compositor (C, wlroots 0.17)
 │   ├── include/         # Headers (server, view, input, output, snap, workspace)
 │   └── src/             # Implementation
 ├── shell/               # Desktop shell UI (C++, Qt6/QML)
@@ -143,7 +143,7 @@ sudo make install
 
 | Component | Technology |
 |---|---|
-| Compositor | C, wlroots 0.18, libwayland |
+| Compositor | C, wlroots 0.17, libwayland |
 | Shell UI | C++17, Qt 6, QML |
 | Rendering | wlr_scene (compositor), Qt Quick Scene Graph (shell) |
 | Display Protocol | Wayland |

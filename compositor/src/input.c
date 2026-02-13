@@ -17,6 +17,7 @@
 #include "server.h"
 #include "view.h"
 #include "snap.h"
+#include "workspace.h"
 
 /* Handle compositor keybindings (Super+key shortcuts) */
 static bool handle_keybinding(struct lw_server *server, xkb_keysym_t sym,
@@ -307,7 +308,7 @@ void lw_cursor_axis(struct wl_listener *listener, void *data) {
     struct wlr_pointer_axis_event *event = data;
     wlr_seat_pointer_notify_axis(server->seat, event->time_msec,
         event->orientation, event->delta, event->delta_discrete,
-        event->source, event->relative_direction);
+        event->source);
 }
 
 void lw_cursor_frame(struct wl_listener *listener, void *data) {

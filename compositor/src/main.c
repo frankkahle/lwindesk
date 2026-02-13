@@ -56,6 +56,12 @@ int main(int argc, char *argv[]) {
     if (startup_cmd) {
         wlr_log(WLR_INFO, "Launching startup command: %s", startup_cmd);
         if (fork() == 0) {
+            /* Ensure the child connects to our Wayland compositor,
+             * not the parent X11 display */
+            unsetenv("DISPLAY");
+            setenv("QT_QPA_PLATFORM", "wayland", 1);
+            setenv("XDG_RUNTIME_DIR", getenv("XDG_RUNTIME_DIR") ?
+                   getenv("XDG_RUNTIME_DIR") : "/run/user/1000", 1);
             execl("/bin/sh", "/bin/sh", "-c", startup_cmd, NULL);
             perror("execl");
             _exit(1);

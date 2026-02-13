@@ -1,26 +1,29 @@
 import QtQuick
+import QtQuick.Controls
 
 Rectangle {
     id: btn
     width: 44
     height: 44
     radius: 4
-    color: mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) :
-           active ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
+    color: mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.15) :
+           active ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
 
     property string iconSource: ""
+    property string iconText: ""
     property string tooltip: ""
     property bool active: false
     property bool isStartButton: false
 
     signal clicked()
 
-    Image {
+    Text {
         anchors.centerIn: parent
-        width: 22
-        height: 22
-        source: btn.iconSource
-        sourceSize: Qt.size(22, 22)
+        text: btn.iconText
+        font.pixelSize: isStartButton ? 20 : 16
+        font.family: "Segoe UI Symbol"
+        color: "white"
+        visible: btn.iconText.length > 0
     }
 
     /* Active indicator (bottom line) */
@@ -38,6 +41,7 @@ Rectangle {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
         onClicked: btn.clicked()
     }
 

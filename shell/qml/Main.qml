@@ -9,10 +9,22 @@ import LWinDesk
 Window {
     id: root
     visible: true
-    width: Screen.width
-    height: Screen.height
+    width: Screen.width > 0 ? Screen.width : 1920
+    height: Screen.height > 0 ? Screen.height : 1080
     color: "transparent"
-    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    flags: Qt.FramelessWindowHint
+
+    /* Windows 11-style desktop background gradient */
+    Rectangle {
+        anchors.fill: parent
+        z: -2
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#1B1B3A" }
+            GradientStop { position: 0.4; color: "#0078D4" }
+            GradientStop { position: 0.7; color: "#50E6FF" }
+            GradientStop { position: 1.0; color: "#1B1B3A" }
+        }
+    }
 
     /* Taskbar at the bottom */
     Loader {

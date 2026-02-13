@@ -55,8 +55,7 @@ struct lw_server {
     struct wlr_scene_output_layout *scene_layout;
 
     struct wlr_xdg_shell *xdg_shell;
-    struct wl_listener new_xdg_toplevel;
-    struct wl_listener new_xdg_popup;
+    struct wl_listener new_xdg_surface;
 
     struct wlr_output_layout *output_layout;
     struct wl_list outputs;              /* lw_output.link */

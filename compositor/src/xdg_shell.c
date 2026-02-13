@@ -1,5 +1,5 @@
 /*
- * lwindesk - compositor/src/xdg_shell.c - XDG shell toplevel/popup handling
+ * lwindesk - compositor/src/xdg_shell.c - XDG shell surface handling (wlroots 0.17)
  */
 
 #define _POSIX_C_SOURCE 200112L
@@ -88,28 +88,27 @@ static void xdg_toplevel_request_fullscreen(struct wl_listener *listener,
     (void)view;
 }
 
-void lw_xdg_new_toplevel(struct wl_listener *listener, void *data) {
-    struct lw_server *server =
-        wl_container_of(listener, server, new_xdg_toplevel);
-    struct wlr_xdg_toplevel *toplevel = data;
+static void setup_toplevel(struct lw_server *server,
+                            struct wlr_xdg_surface *xdg_surface) {
+    struct wlr_xdg_toplevel *toplevel = xdg_surface->toplevel;
 
     struct lw_view *view = calloc(1, sizeof(*view));
     view->server = server;
     view->xdg_toplevel = toplevel;
     view->scene_tree =
-        wlr_scene_xdg_surface_create(&server->scene->tree,
-                                       toplevel->base);
+        wlr_scene_xdg_surface_create(&server->scene->tree, xdg_surface);
     view->scene_tree->node.data = view;
+    xdg_surface->data = view->scene_tree;
 
-    /* Listen to toplevel events */
+    /* Listen to surface events (map/unmap/commit are on wlr_surface in 0.17) */
     view->map.notify = xdg_toplevel_map;
-    wl_signal_add(&toplevel->base->surface->events.map, &view->map);
+    wl_signal_add(&xdg_surface->surface->events.map, &view->map);
     view->unmap.notify = xdg_toplevel_unmap;
-    wl_signal_add(&toplevel->base->surface->events.unmap, &view->unmap);
+    wl_signal_add(&xdg_surface->surface->events.unmap, &view->unmap);
     view->commit.notify = xdg_toplevel_commit;
-    wl_signal_add(&toplevel->base->surface->events.commit, &view->commit);
+    wl_signal_add(&xdg_surface->surface->events.commit, &view->commit);
     view->destroy.notify = xdg_toplevel_destroy;
-    wl_signal_add(&toplevel->events.destroy, &view->destroy);
+    wl_signal_add(&xdg_surface->events.destroy, &view->destroy);
 
     view->request_move.notify = xdg_toplevel_request_move;
     wl_signal_add(&toplevel->events.request_move, &view->request_move);
@@ -132,13 +131,28 @@ void lw_xdg_new_toplevel(struct wl_listener *listener, void *data) {
              toplevel->title ? toplevel->title : "(untitled)");
 }
 
-void lw_xdg_new_popup(struct wl_listener *listener, void *data) {
-    struct wlr_xdg_popup *popup = data;
+static void setup_popup(struct wlr_xdg_surface *xdg_surface) {
     struct wlr_xdg_surface *parent =
-        wlr_xdg_surface_try_from_wlr_surface(popup->parent);
+        wlr_xdg_surface_try_from_wlr_surface(xdg_surface->popup->parent);
     if (!parent) return;
 
     struct wlr_scene_tree *parent_tree = parent->data;
-    popup->base->data =
-        wlr_scene_xdg_surface_create(parent_tree, popup->base);
+    xdg_surface->data =
+        wlr_scene_xdg_surface_create(parent_tree, xdg_surface);
+}
+
+/*
+ * wlroots 0.17 uses a single new_surface event.
+ * We check the role and dispatch to toplevel or popup setup.
+ */
+void lw_xdg_new_surface(struct wl_listener *listener, void *data) {
+    struct lw_server *server =
+        wl_container_of(listener, server, new_xdg_surface);
+    struct wlr_xdg_surface *xdg_surface = data;
+
+    if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+        setup_toplevel(server, xdg_surface);
+    } else if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
+        setup_popup(xdg_surface);
+    }
 }

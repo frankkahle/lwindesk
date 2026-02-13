@@ -35,6 +35,7 @@ target_link_libraries(lwindesk-shell PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
     Qt6::WaylandClient
     Qt6::Svg
 )
