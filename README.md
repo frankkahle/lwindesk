@@ -5,7 +5,7 @@ A Windows 11-like Wayland desktop environment for Linux.
 LWinDesk is a from-scratch desktop environment built on **wlroots** (compositor) and **Qt6/QML** (shell UI), designed to give Linux users a familiar Windows 11 experience. It installs as a session option alongside GNOME/KDE on any Ubuntu system.
 
 ![Status](https://img.shields.io/badge/status-early%20development-orange)
-![License](https://img.shields.io/badge/license-TBD-lightgrey)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Wayland-blue)
 
 ---
@@ -75,10 +75,11 @@ sudo apt install -y \
   libxkbcommon-dev libinput-dev libdrm-dev libgbm-dev \
   libegl-dev libgles-dev libpixman-1-dev libseat-dev \
   libsystemd-dev libdbus-1-dev \
+  libcairo2-dev libpango1.0-dev \
   qt6-base-dev qt6-declarative-dev qt6-wayland-dev qt6-svg-dev \
   qml6-module-qtquick qml6-module-qtquick-controls \
   qml6-module-qtquick-layouts qml6-module-qtquick-window \
-  xwayland
+  xwayland foot adwaita-icon-theme
 ```
 
 ### Build
@@ -114,28 +115,48 @@ sudo make install
 | `Super+Up` | Maximize |
 | `Super+Down` | Restore |
 | `Super+Q` | Close window |
+| `Alt+Tab` | Cycle windows |
 | `Alt+F4` | Close window |
 | `Super+1-9` | Switch virtual desktop |
+
+---
+
+### Install as .deb
+
+```bash
+cd /home/frank/lwindesk
+ln -sf packaging/debian debian
+dpkg-buildpackage -us -uc -b
+sudo dpkg -i ../lwindesk_0.1.0-1_amd64.deb
+# LWinDesk will appear as a session option at your login screen
+```
 
 ---
 
 ## Roadmap
 
 - [x] Project scaffold and architecture
-- [ ] Compositor builds and runs
-- [ ] Shell renders taskbar with clock
-- [ ] Start menu opens/closes with app grid
-- [ ] Window snap zones functional
-- [ ] Layer shell integration (taskbar anchored to screen)
-- [ ] IPC between compositor and shell
+- [x] Compositor builds and runs
+- [x] Shell renders taskbar with clock
+- [x] Start menu opens/closes with app grid
+- [x] Window snap zones functional
+- [x] IPC between compositor and shell
+- [x] Server-side window decorations (cairo-rendered title bar)
+- [x] Keyboard shortcuts (Super, Alt+Tab, Super+D, etc.)
+- [x] Desktop right-click context menu
+- [x] Icon theme integration (Adwaita)
+- [x] Quick Settings panel with interactive toggles/sliders
+- [x] XDG decoration protocol support
+- [x] .deb packaging
+- [ ] Running apps in taskbar
 - [ ] System tray (StatusNotifier D-Bus)
 - [ ] Notification daemon (org.freedesktop.Notifications)
 - [ ] XWayland support for legacy X11 apps
-- [ ] .deb packaging
 - [ ] Theming system
 - [ ] Screen lock with PAM authentication
 - [ ] Multi-monitor support
 - [ ] Settings app
+- [ ] File manager integration
 
 ---
 
@@ -176,4 +197,4 @@ make -j$(nproc)
 
 ## License
 
-TBD
+GPL-3.0 - see [LICENSE](LICENSE) for details.

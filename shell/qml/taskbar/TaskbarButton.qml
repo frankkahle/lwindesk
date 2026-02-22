@@ -17,13 +17,26 @@ Rectangle {
 
     signal clicked()
 
+    /* Icon image (used when iconSource is set) */
+    Image {
+        id: iconImage
+        anchors.centerIn: parent
+        width: btn.isStartButton ? 24 : 20
+        height: btn.isStartButton ? 24 : 20
+        sourceSize: Qt.size(width, height)
+        source: btn.iconSource
+        visible: btn.iconSource.length > 0
+        smooth: true
+    }
+
+    /* Fallback text icon (used when iconSource is empty) */
     Text {
         anchors.centerIn: parent
         text: btn.iconText
         font.pixelSize: isStartButton ? 20 : 16
         font.family: "Segoe UI Symbol"
         color: "white"
-        visible: btn.iconText.length > 0
+        visible: btn.iconSource.length === 0 && btn.iconText.length > 0
     }
 
     /* Active indicator (bottom line) */

@@ -39,9 +39,13 @@ void lw_seat_request_set_selection(struct wl_listener *listener, void *data);
 
 /* Begin interactive move/resize */
 void lw_view_begin_move(struct lw_view *view);
+void lw_view_begin_move_from_titlebar(struct lw_view *view);
 void lw_view_begin_resize(struct lw_view *view, uint32_t edges);
 
 /* XDG shell handler */
 void lw_xdg_new_surface(struct wl_listener *listener, void *data);
+
+/* XDG decoration handler */
+void lw_xdg_new_decoration(struct wl_listener *listener, void *data);
 
 #endif /* LWINDESK_INPUT_H */

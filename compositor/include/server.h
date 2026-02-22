@@ -21,10 +21,30 @@
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 
 /* Forward declarations */
 struct lw_view;
 struct lw_workspace;
+
+/* Maximum number of connected IPC clients */
+#define LW_IPC_MAX_CLIENTS 8
+
+/* IPC client connection */
+struct lw_ipc_client {
+    int fd;
+    struct wl_event_source *event_source;
+    struct lw_server *server;
+};
+
+/* IPC state for shell communication */
+struct lw_ipc {
+    int listen_fd;
+    struct wl_event_source *listen_source;
+    char socket_path[256];
+    struct lw_ipc_client clients[LW_IPC_MAX_CLIENTS];
+    int client_count;
+};
 
 /* Snap zones for Windows 11-style snap layouts */
 enum lw_snap_zone {
@@ -56,6 +76,9 @@ struct lw_server {
 
     struct wlr_xdg_shell *xdg_shell;
     struct wl_listener new_xdg_surface;
+
+    struct wlr_xdg_decoration_manager_v1 *xdg_decoration_mgr;
+    struct wl_listener new_xdg_decoration;
 
     struct wlr_output_layout *output_layout;
     struct wl_list outputs;              /* lw_output.link */
@@ -92,6 +115,13 @@ struct lw_server {
 
     /* Snap state */
     enum lw_snap_zone pending_snap;
+
+    /* IPC for shell communication */
+    struct lw_ipc ipc;
+
+    /* Keyboard shortcut state: track Super key for tap detection */
+    bool super_pressed;
+    bool super_used_in_combo;
 
     /* Wayland socket name for clients */
     const char *socket;

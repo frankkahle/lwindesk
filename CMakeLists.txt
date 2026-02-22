@@ -22,9 +22,11 @@ pkg_check_modules(DRM REQUIRED libdrm)
 pkg_check_modules(GBM REQUIRED gbm)
 pkg_check_modules(LIBSEAT REQUIRED libseat)
 pkg_check_modules(SYSTEMD REQUIRED libsystemd)
+pkg_check_modules(CAIRO REQUIRED cairo)
+pkg_check_modules(PANGOCAIRO REQUIRED pangocairo)
 
 # Shell dependencies (Qt6)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 WaylandClient Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 WaylandClient Network Svg)
 qt_standard_project_setup()
 
 # Subdirectories

@@ -3,9 +3,22 @@ import QtQuick
 Rectangle {
     height: 36
     radius: 18
-    color: Qt.rgba(1, 1, 1, 0.08)
-    border.color: Qt.rgba(1, 1, 1, 0.15)
+    color: searchInput.activeFocus ? Qt.rgba(1, 1, 1, 0.12) :
+           Qt.rgba(1, 1, 1, 0.08)
+    border.color: searchInput.activeFocus ? "#60CDFF" :
+                  Qt.rgba(1, 1, 1, 0.15)
     border.width: 1
+
+    property alias text: searchInput.text
+    signal searchChanged(string text)
+
+    function clear() { searchInput.text = "" }
+    function giveFocus() { searchInput.forceActiveFocus() }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: searchInput.forceActiveFocus()
+    }
 
     Row {
         anchors.fill: parent
@@ -25,9 +38,12 @@ Rectangle {
             color: "white"
             font.pixelSize: 13
             font.family: "Selawik"
+            clip: true
+            selectByMouse: true
+            onTextChanged: searchChanged(text)
 
             Text {
-                visible: !searchInput.text
+                visible: !searchInput.text && !searchInput.activeFocus
                 text: "Type here to search"
                 color: Qt.rgba(1, 1, 1, 0.4)
                 font: searchInput.font

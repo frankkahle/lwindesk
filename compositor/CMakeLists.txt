@@ -21,6 +21,7 @@ add_executable(lwindesk-compositor
     src/output.c
     src/view.c
     src/input.c
+    src/ipc.c
     src/xdg_shell.c
     src/layer_shell.c
     src/workspace.c
@@ -40,6 +41,8 @@ target_include_directories(lwindesk-compositor PRIVATE
     ${GBM_INCLUDE_DIRS}
     ${LIBSEAT_INCLUDE_DIRS}
     ${SYSTEMD_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+    ${PANGOCAIRO_INCLUDE_DIRS}
 )
 
 target_compile_definitions(lwindesk-compositor PRIVATE
@@ -57,6 +60,8 @@ target_link_libraries(lwindesk-compositor PRIVATE
     ${GBM_LIBRARIES}
     ${LIBSEAT_LIBRARIES}
     ${SYSTEMD_LIBRARIES}
+    ${CAIRO_LIBRARIES}
+    ${PANGOCAIRO_LIBRARIES}
     m
 )
 

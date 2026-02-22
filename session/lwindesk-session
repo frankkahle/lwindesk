@@ -1,10 +1,34 @@
 #!/bin/sh
-# lwindesk session launcher
+# lwindesk-session - LWinDesk Wayland session launcher
 # This is executed by the display manager (GDM) when the user selects LWinDesk
 
+# ── Session type identification ──
 export XDG_CURRENT_DESKTOP=LWinDesk
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=lwindesk
 
-# Start the compositor, which will launch the shell
+# ── Wayland / display environment ──
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export SDL_VIDEODRIVER=wayland
+export _JAVA_AWT_WM_NONREPARENTING=1
+export CLUTTER_BACKEND=wayland
+export ECORE_EVAS_ENGINE=wayland_shm
+export ELM_ENGINE=wayland_shm
+export GDK_BACKEND=wayland
+
+# ── XDG runtime directory (should already be set by the DM) ──
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    export XDG_RUNTIME_DIR
+fi
+
+# ── Ensure D-Bus session bus is available ──
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    eval "$(dbus-launch --sh-syntax)"
+    export DBUS_SESSION_BUS_ADDRESS
+fi
+
+# ── Start the compositor, which will launch the shell ──
 exec lwindesk-compositor -s lwindesk-shell

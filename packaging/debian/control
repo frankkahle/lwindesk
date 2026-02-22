@@ -1,7 +1,8 @@
 Source: lwindesk
 Section: x11
 Priority: optional
-Maintainer: Frank Kahle <frank@lwindesk>
+Maintainer: Frank Kahle <frank@lwindesk.org>
+Homepage: https://github.com/frankkahle/lwindesk
 Build-Depends: debhelper-compat (= 13),
                cmake (>= 3.22),
                pkg-config,
@@ -17,11 +18,17 @@ Build-Depends: debhelper-compat (= 13),
                libpixman-1-dev,
                libseat-dev,
                libsystemd-dev,
+               libcairo2-dev,
+               libpango1.0-dev,
                qt6-base-dev,
+               qt6-base-private-dev,
                qt6-declarative-dev,
                qt6-wayland-dev,
                qt6-svg-dev
 Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Vcs-Git: https://github.com/frankkahle/lwindesk.git
+Vcs-Browser: https://github.com/frankkahle/lwindesk
 
 Package: lwindesk
 Architecture: any
@@ -30,9 +37,22 @@ Depends: ${shlibs:Depends},
          xwayland,
          qml6-module-qtquick,
          qml6-module-qtquick-controls,
-         qml6-module-qtquick-layouts
-Description: A Windows 11-like Wayland Desktop Environment
+         qml6-module-qtquick-layouts,
+         qml6-module-qtquick-window
+Recommends: foot,
+            adwaita-icon-theme
+Description: Windows 11-like Wayland desktop environment for Linux
  LWinDesk is a lightweight Wayland desktop environment for Linux that
- provides a familiar Windows 11 experience. Features include a centered
- taskbar, start menu, snap layouts, virtual desktops, notification center,
- and quick settings panel.
+ provides a familiar Windows 11-like experience. It consists of a wlroots-based
+ compositor with server-side decorations and a Qt6/QML shell providing the
+ visual UI.
+ .
+ Features include:
+  * Centered taskbar with system tray and clock
+  * Start menu with application grid and search
+  * Window snap layouts and zones
+  * Virtual desktop switching
+  * Notification center and quick settings panel
+  * Server-side window decorations with title bars
+  * Desktop wallpaper support
+  * Keyboard shortcuts (Super key, Alt+Tab, etc.)

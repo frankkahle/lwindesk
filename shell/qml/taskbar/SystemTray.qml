@@ -5,12 +5,12 @@ Row {
     spacing: 2
     height: parent.height
 
-    /* System tray icons using Unicode symbols */
+    /* System tray icons using freedesktop icon theme */
     Repeater {
         model: [
-            { icon: "\uD83D\uDD0A", tip: "Volume" },
-            { icon: "\u2B06", tip: "Network" },
-            { icon: "\uD83D\uDD0B", tip: "Battery" }
+            { icon: "audio-volume-medium-symbolic", tip: "Volume" },
+            { icon: "network-wireless-symbolic", tip: "Network" },
+            { icon: "battery-good-symbolic", tip: "Battery" }
         ]
         delegate: Rectangle {
             width: 28
@@ -19,11 +19,13 @@ Row {
             anchors.verticalCenter: parent.verticalCenter
             color: trayMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
 
-            Text {
+            Image {
                 anchors.centerIn: parent
-                text: modelData.icon
-                font.pixelSize: 14
-                color: Qt.rgba(1, 1, 1, 0.85)
+                width: 16
+                height: 16
+                sourceSize: Qt.size(16, 16)
+                source: "image://icon/" + modelData.icon + "?color=white"
+                smooth: true
             }
 
             MouseArea {

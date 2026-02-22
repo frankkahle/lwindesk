@@ -6,18 +6,24 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QIcon>
 
 #include "shellmanager.h"
 #include "taskbarmodel.h"
 #include "startmenumodel.h"
 #include "notificationmanager.h"
 #include "systemtraymanager.h"
+#include "iconprovider.h"
 
 int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     app.setApplicationName("lwindesk-shell");
     app.setApplicationVersion("0.1.0");
     app.setOrganizationName("lwindesk");
+
+    /* Set freedesktop icon theme to Adwaita */
+    QIcon::setThemeName("Adwaita");
+    QIcon::setThemeSearchPaths({"/usr/share/icons"});
 
     /* Register C++ types for QML */
     qmlRegisterType<ShellManager>("LWinDesk", 1, 0, "ShellManager");
@@ -29,6 +35,9 @@ int main(int argc, char *argv[]) {
                                         "SystemTrayManager");
 
     QQmlApplicationEngine engine;
+
+    /* Register icon theme image provider for QML */
+    engine.addImageProvider("icon", new IconThemeProvider());
 
     /* Create shell manager (handles IPC with compositor) */
     ShellManager shellManager;

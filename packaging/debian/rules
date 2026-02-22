@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTS=OFF
+
+override_dh_auto_install:
+	dh_auto_install
+	# Ensure session script is executable
+	chmod 755 debian/lwindesk/usr/bin/lwindesk-session || true

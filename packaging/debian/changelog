@@ -1,0 +1,18 @@
+lwindesk (0.1.0-1) noble; urgency=medium
+
+  * Initial release
+  * Wayland compositor based on wlroots 0.17 with scene-graph API
+  * Server-side window decorations with cairo/pango title bar rendering
+  * Qt6/QML shell with centered taskbar (48px bottom strip)
+  * Start menu with application grid and search functionality
+  * Window snap layouts and snap zones
+  * Virtual desktop switching
+  * Notification center and quick settings panel
+  * System tray with clock widget
+  * Desktop wallpaper support
+  * Right-click desktop context menu
+  * Keyboard shortcuts: Super key, Alt+Tab, and more
+  * GDM session integration via wayland-sessions desktop file
+  * XWayland support for X11 application compatibility
+
+ -- Frank Kahle <frank@lwindesk.org>  Sat, 21 Feb 2026 12:00:00 -0400

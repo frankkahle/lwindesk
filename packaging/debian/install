@@ -1,0 +1,4 @@
+usr/bin/lwindesk-compositor
+usr/bin/lwindesk-shell
+usr/bin/lwindesk-session
+usr/share/wayland-sessions/lwindesk.desktop

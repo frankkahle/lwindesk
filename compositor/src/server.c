@@ -24,6 +24,7 @@
 #include "server.h"
 #include "output.h"
 #include "input.h"
+#include "ipc.h"
 #include "view.h"
 #include "workspace.h"
 
@@ -62,9 +63,42 @@ int lw_server_init(struct lw_server *server) {
     server->scene_layout = wlr_scene_attach_output_layout(server->scene,
                                                             server->output_layout);
 
-    /* Desktop background (dark blue, Windows 11-inspired) */
-    float bg_color[4] = {0.0f, 0.47f, 0.83f, 1.0f};  /* #0078D4 */
-    wlr_scene_rect_create(&server->scene->tree, 8192, 8192, bg_color);
+    /* Desktop background — smooth gradient from dark navy → blue → dark purple */
+    {
+        /* Gradient color stops: position (0-1), R, G, B */
+        struct { float pos, r, g, b; } stops[] = {
+            {0.00f, 0.00f, 0.04f, 0.12f},
+            {0.35f, 0.00f, 0.35f, 0.70f},
+            {0.50f, 0.00f, 0.47f, 0.83f},
+            {0.65f, 0.00f, 0.35f, 0.70f},
+            {1.00f, 0.08f, 0.05f, 0.22f},
+        };
+        int nstops = sizeof(stops) / sizeof(stops[0]);
+        int nstrips = 128;
+        int total_h = 4096;
+        int strip_h = total_h / nstrips;
+        for (int i = 0; i < nstrips; i++) {
+            float t = (float)i / (float)(nstrips - 1);
+            /* Find the two stops to interpolate between */
+            int s = 0;
+            for (int j = 0; j < nstops - 1; j++) {
+                if (t >= stops[j].pos) s = j;
+            }
+            float local_t = (t - stops[s].pos) /
+                            (stops[s + 1].pos - stops[s].pos);
+            if (local_t < 0.0f) local_t = 0.0f;
+            if (local_t > 1.0f) local_t = 1.0f;
+            float color[4] = {
+                stops[s].r + (stops[s+1].r - stops[s].r) * local_t,
+                stops[s].g + (stops[s+1].g - stops[s].g) * local_t,
+                stops[s].b + (stops[s+1].b - stops[s].b) * local_t,
+                1.0f
+            };
+            struct wlr_scene_rect *rect =
+                wlr_scene_rect_create(&server->scene->tree, 8192, strip_h + 1, color);
+            wlr_scene_node_set_position(&rect->node, 0, i * strip_h);
+        }
+    }
 
     /* Create Wayland globals */
     wlr_compositor_create(server->wl_display, 5, server->renderer);
@@ -76,6 +110,13 @@ int lw_server_init(struct lw_server *server) {
     server->new_xdg_surface.notify = lw_xdg_new_surface;
     wl_signal_add(&server->xdg_shell->events.new_surface,
                   &server->new_xdg_surface);
+
+    /* XDG decoration manager — tells clients to use server-side decorations */
+    server->xdg_decoration_mgr =
+        wlr_xdg_decoration_manager_v1_create(server->wl_display);
+    server->new_xdg_decoration.notify = lw_xdg_new_decoration;
+    wl_signal_add(&server->xdg_decoration_mgr->events.new_toplevel_decoration,
+                  &server->new_xdg_decoration);
 
     /* Initialize view list */
     wl_list_init(&server->views);
@@ -130,6 +171,16 @@ int lw_server_init(struct lw_server *server) {
     wlr_log(WLR_INFO, "Wayland compositor listening on %s", server->socket);
     setenv("WAYLAND_DISPLAY", server->socket, true);
 
+    /* Initialize IPC socket for shell communication */
+    if (lw_ipc_init(server) != 0) {
+        wlr_log(WLR_ERROR, "Failed to initialize IPC (non-fatal)");
+        /* IPC failure is non-fatal; shell just won't get shortcut events */
+    }
+
+    /* Initialize keyboard shortcut state */
+    server->super_pressed = false;
+    server->super_used_in_combo = false;
+
     return 0;
 }
 
@@ -148,6 +199,7 @@ int lw_server_run(struct lw_server *server) {
 
 void lw_server_destroy(struct lw_server *server) {
     wlr_log(WLR_INFO, "Shutting down compositor");
+    lw_ipc_destroy(server);
     wl_display_destroy_clients(server->wl_display);
     wlr_scene_node_destroy(&server->scene->tree.node);
     wlr_xcursor_manager_destroy(server->cursor_mgr);

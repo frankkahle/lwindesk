@@ -14,10 +14,64 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "input.h"
+#include "ipc.h"
 #include "server.h"
 #include "view.h"
 #include "snap.h"
 #include "workspace.h"
+
+#include <linux/input-event-codes.h>
+#include <string.h>
+
+/* Check if a view is a shell window (title starting with "lwindesk-") */
+static bool is_shell_view(struct lw_view *view) {
+    const char *title = view->xdg_toplevel->title;
+    return title && strncmp(title, "lwindesk-", 9) == 0;
+}
+
+/* Alt+Tab: cycle to next non-shell window.
+ * Move the current focused view to the back of the list, then
+ * focus the next mapped, non-shell, non-minimized view. */
+static void cycle_window(struct lw_server *server) {
+    if (wl_list_empty(&server->views)) return;
+
+    /* Find the next suitable view to focus. We start from the
+     * second entry in the list (the one behind the current top). */
+    struct lw_view *current = wl_container_of(
+        server->views.next, current, link);
+
+    struct lw_view *next = NULL;
+    struct lw_view *view;
+    bool past_current = false;
+
+    wl_list_for_each(view, &server->views, link) {
+        if (view == current) {
+            past_current = true;
+            continue;
+        }
+        if (past_current && view->mapped && !view->is_minimized &&
+            !is_shell_view(view)) {
+            next = view;
+            break;
+        }
+    }
+
+    /* If we didn't find one after current, wrap around */
+    if (!next) {
+        wl_list_for_each(view, &server->views, link) {
+            if (view == current) break;
+            if (view->mapped && !view->is_minimized &&
+                !is_shell_view(view)) {
+                next = view;
+                break;
+            }
+        }
+    }
+
+    if (next && next != current) {
+        lw_view_focus(next);
+    }
+}
 
 /* Handle compositor keybindings (Super+key shortcuts) */
 static bool handle_keybinding(struct lw_server *server, xkb_keysym_t sym,
@@ -26,10 +80,14 @@ static bool handle_keybinding(struct lw_server *server, xkb_keysym_t sym,
     bool alt = modifiers & WLR_MODIFIER_ALT;
 
     if (super) {
+        /* Any key pressed with Super means Super is used in a combo,
+         * so we should not fire toggle-start-menu on release */
+        server->super_used_in_combo = true;
+
         switch (sym) {
         case XKB_KEY_d:
         case XKB_KEY_D:
-            /* Super+D: Show desktop (minimize all) */
+            /* Super+D: Show desktop (minimize all) + notify shell */
             {
                 struct lw_view *view;
                 wl_list_for_each(view, &server->views, link) {
@@ -37,6 +95,7 @@ static bool handle_keybinding(struct lw_server *server, xkb_keysym_t sym,
                         lw_view_minimize(view);
                     }
                 }
+                lw_ipc_send(server, "show-desktop");
             }
             return true;
 
@@ -103,14 +162,23 @@ static bool handle_keybinding(struct lw_server *server, xkb_keysym_t sym,
         }
     }
 
-    if (alt && sym == XKB_KEY_F4) {
-        /* Alt+F4: Close focused window */
-        if (!wl_list_empty(&server->views)) {
-            struct lw_view *top =
-                wl_container_of(server->views.next, top, link);
-            lw_view_close(top);
+    if (alt) {
+        if (sym == XKB_KEY_Tab) {
+            /* Alt+Tab: Cycle windows */
+            cycle_window(server);
+            lw_ipc_send(server, "cycle-window");
+            return true;
         }
-        return true;
+
+        if (sym == XKB_KEY_F4) {
+            /* Alt+F4: Close focused window */
+            if (!wl_list_empty(&server->views)) {
+                struct lw_view *top =
+                    wl_container_of(server->views.next, top, link);
+                lw_view_close(top);
+            }
+            return true;
+        }
     }
 
     return false;
@@ -123,6 +191,11 @@ static void keyboard_handle_modifiers(struct wl_listener *listener,
     wlr_seat_set_keyboard(keyboard->server->seat, keyboard->wlr_keyboard);
     wlr_seat_keyboard_notify_modifiers(keyboard->server->seat,
         &keyboard->wlr_keyboard->modifiers);
+}
+
+static bool is_super_key(uint32_t keycode) {
+    /* Linux input event codes for left/right meta (Super) keys */
+    return keycode == KEY_LEFTMETA || keycode == KEY_RIGHTMETA;
 }
 
 static void keyboard_handle_key(struct wl_listener *listener, void *data) {
@@ -139,7 +212,34 @@ static void keyboard_handle_key(struct wl_listener *listener, void *data) {
     uint32_t modifiers =
         wlr_keyboard_get_modifiers(keyboard->wlr_keyboard);
 
-    if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+    /* Track Super key state for tap-to-toggle-start-menu.
+     * We use the raw evdev keycode (event->keycode) which does NOT
+     * have the +8 XKB offset. */
+    if (is_super_key(event->keycode)) {
+        if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+            server->super_pressed = true;
+            server->super_used_in_combo = false;
+            /* Don't pass the bare Super press to clients */
+            handled = true;
+        } else if (event->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+            if (server->super_pressed && !server->super_used_in_combo) {
+                /* Super was tapped alone: toggle start menu */
+                lw_ipc_send(server, "toggle-start-menu");
+            }
+            server->super_pressed = false;
+            server->super_used_in_combo = false;
+            /* Don't pass the bare Super release to clients */
+            handled = true;
+        }
+    } else {
+        /* Any non-Super key while Super is held marks it as a combo */
+        if (server->super_pressed &&
+            event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+            server->super_used_in_combo = true;
+        }
+    }
+
+    if (!handled && event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
         for (int i = 0; i < nsyms; i++) {
             handled = handle_keybinding(server, syms[i], modifiers);
             if (handled) break;
@@ -236,6 +336,17 @@ void lw_process_cursor_motion(struct lw_server *server, uint32_t time) {
         return;
     }
 
+    /* Check if cursor is over a decoration element */
+    struct lw_view *deco_view = NULL;
+    enum lw_deco_button btn = lw_deco_button_at(server,
+        server->cursor->x, server->cursor->y, &deco_view);
+    if (btn != LW_DECO_NONE) {
+        /* Over a decoration: set appropriate cursor and clear surface focus */
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, "default");
+        wlr_seat_pointer_clear_focus(server->seat);
+        return;
+    }
+
     /* Passthrough: find view under cursor */
     double sx, sy;
     struct wlr_surface *surface = NULL;
@@ -277,9 +388,6 @@ void lw_cursor_button(struct wl_listener *listener, void *data) {
         wl_container_of(listener, server, cursor_button);
     struct wlr_pointer_button_event *event = data;
 
-    wlr_seat_pointer_notify_button(server->seat,
-        event->time_msec, event->button, event->state);
-
     if (event->state == WL_POINTER_BUTTON_STATE_RELEASED) {
         /* On release during move, apply snap if pending */
         if (server->cursor_mode == LW_CURSOR_MOVE &&
@@ -289,8 +397,46 @@ void lw_cursor_button(struct wl_listener *listener, void *data) {
         }
         server->cursor_mode = LW_CURSOR_PASSTHROUGH;
         server->grabbed_view = NULL;
+
+        wlr_seat_pointer_notify_button(server->seat,
+            event->time_msec, event->button, event->state);
         return;
     }
+
+    /* Check if the click is on a decoration button */
+    struct lw_view *deco_view = NULL;
+    enum lw_deco_button btn = lw_deco_button_at(server,
+        server->cursor->x, server->cursor->y, &deco_view);
+
+    if (btn != LW_DECO_NONE && deco_view) {
+        /* Focus the view that owns the decoration */
+        lw_view_focus(deco_view);
+
+        switch (btn) {
+        case LW_DECO_CLOSE:
+            lw_view_close(deco_view);
+            return;
+        case LW_DECO_MAXIMIZE:
+            if (deco_view->is_maximized) {
+                lw_view_restore(deco_view);
+            } else {
+                lw_view_snap(deco_view, LW_SNAP_MAXIMIZE);
+            }
+            return;
+        case LW_DECO_MINIMIZE:
+            lw_view_minimize(deco_view);
+            return;
+        case LW_DECO_TITLEBAR:
+            /* Clicking the title bar initiates a window move */
+            lw_view_begin_move_from_titlebar(deco_view);
+            return;
+        default:
+            break;
+        }
+    }
+
+    wlr_seat_pointer_notify_button(server->seat,
+        event->time_msec, event->button, event->state);
 
     /* Focus the clicked view */
     double sx, sy;
@@ -342,6 +488,15 @@ void lw_view_begin_move(struct lw_view *view) {
         view->xdg_toplevel->base->surface) {
         return;
     }
+    server->grabbed_view = view;
+    server->cursor_mode = LW_CURSOR_MOVE;
+    server->grab_x = server->cursor->x - view->x;
+    server->grab_y = server->cursor->y - view->y;
+}
+
+void lw_view_begin_move_from_titlebar(struct lw_view *view) {
+    struct lw_server *server = view->server;
+    /* Initiated by compositor (title bar click), no focus check needed */
     server->grabbed_view = view;
     server->cursor_mode = LW_CURSOR_MOVE;
     server->grab_x = server->cursor->x - view->x;

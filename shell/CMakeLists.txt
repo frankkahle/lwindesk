@@ -5,6 +5,7 @@ qt_add_executable(lwindesk-shell
     src/startmenumodel.cpp
     src/notificationmanager.cpp
     src/systemtraymanager.cpp
+    src/iconprovider.cpp
 )
 
 qt_add_qml_module(lwindesk-shell
@@ -26,6 +27,9 @@ qt_add_qml_module(lwindesk-shell
         qml/snapoverlay/SnapOverlay.qml
         qml/lockscreen/LockScreen.qml
         qml/virtualdesktops/DesktopSwitcher.qml
+        qml/desktop/DesktopContextMenu.qml
+        qml/desktop/ContextMenuItem.qml
+        qml/desktop/ContextMenuSeparator.qml
         qml/common/LWButton.qml
         qml/common/LWPanel.qml
 )
@@ -37,6 +41,7 @@ target_link_libraries(lwindesk-shell PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::WaylandClient
+    Qt6::Network
     Qt6::Svg
 )
 
